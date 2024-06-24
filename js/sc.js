@@ -417,12 +417,14 @@ var sc = {
         } else {
             myClassNames += isSuccess ? "success" : "error";
         }
-        this.polipop.add({
-
-            content: message,
-            /*title: 'Message',*/
-            type: myClassNames, //default, info, success, warning or error
-        });
+        if(this.polipop != null){
+            this.polipop.add({
+        
+                content: message,
+                /*title: 'Message',*/
+                type: myClassNames, //default, info, success, warning or error
+            });
+        }
     },
     /**
      * @description Evaluates form, shows warning if need, returns true if form is valid
@@ -431,78 +433,79 @@ var sc = {
     */
     isFormValid: function (formId) {
         let isValidResult = true;
-        let tagName = "";
-        let labelText = "";
-        let inputType = "";
-        if (!this.ine(document.getElementById(formId))) {
-            let inputList = document.getElementById(formId).querySelectorAll('input[required]:not([type="hidden"]):not([hidden]), select[required]:not([hidden]), textarea[required]:not([hidden])');
-            inputList.forEach(function (input) {
-                inputType = input.type;
-                let isChecked = false;
-                let id = input.id;
-                tagName = input.tagName;
-
-                if (inputType === "radio") {
-                    let radioElements = document.querySelectorAll('input[type="radio"][name="' + input.name + '"]');
-                    radioElements.forEach(function (radio) {
-                        if (radio.checked) {
-                            isChecked = true;
-                            return;
-                        }
-                    });
-
-                    if (!isChecked) {
-                        isValidResult = false;
-                        let labelElement = document.querySelector('label[for="' + input.name + '"]');
-                        labelText = labelElement ? labelElement.textContent : input.name;
-                        labelText = labelText.replace("*", "").trim() || input.name;
-                        return;
-                    }
-                } else if (!input.value) {
-                    isValidResult = false;
-                    let labelElement = document.querySelector('label[for="' + id + '"]');
-                    labelText = labelElement ? labelElement.textContent : id;
-                    labelText = labelText.replace("*", "").trim() || input.placeholder || id;
-
-                    var warningText = "Please fill required fields";
-                    if (tagName === "INPUT" || tagName === "TEXTAREA") {
-                        if (inputType === "radio") {
-                            warningText = "Please select an item from " + labelText + " field";
-                        } else {
-                            warningText = "Please fill " + labelText + " field";
-                        }
-                    } else if (tagName === "SELECT") {
-                        warningText = "Please select an item from " + labelText + " field";
-                    }
-
-                    if (!document.getElementById(id).classList.contains("border-danger")) {
-                        document.getElementById(id).classList.add("border-danger");
-                        let warningHtml = '<div class="oopsError text-danger form-text">' + warningText + '</div>';
-                        let itemToAddWarning = document.getElementById(id).parentElement.classList.contains("input-group")
-                            ? document.getElementById(id).parentElement
-                            : document.getElementById(id);
-                        itemToAddWarning.insertAdjacentHTML("afterend", warningHtml);
-
-                        setTimeout(function () {
-                            document.getElementById(id).classList.remove("border-danger");
-                            let errorElements = document.querySelectorAll(".oopsError");
-                            errorElements.forEach(function (errorElement) {
-                                errorElement.remove();
-                            });
-                        }, 10000);
-                    }
-                }
-            });
-        }
-        else {
-            this.showMessage("form is not valid!", false);
+    
+        const form = document.getElementById(formId);
+        if (!form) {
+            this.showMessage("Form is not valid!", false);
             return false;
         }
+    
+        const inputList = form.querySelectorAll('input[required]:not([type="hidden"]):not([hidden]), select[required]:not([hidden]), textarea[required]:not([hidden])');
+    
+        inputList.forEach(input => {
+            const inputType = input.type;
+            const tagName = input.tagName;
+            const id = input.id;
+            let labelText = "";
+    
+            if (inputType === "radio") {
+                const radioElements = document.querySelectorAll(`input[type="radio"][name="${input.name}"]`);
+                const isChecked = Array.from(radioElements).some(radio => radio.checked);
+    
+                if (!isChecked) {
+                    isValidResult = false;
+                    const labelElement = document.querySelector(`label[for="${input.name}"]`);
+                    labelText = labelElement ? labelElement.textContent : input.name;
+                    labelText = labelText.replace("*", "").trim() || input.name;
+                    return;
+                }
+            } else if (!input.value) {
+                isValidResult = false;
+                const labelElement = document.querySelector(`label[for="${id}"]`);
+                labelText = labelElement ? labelElement.textContent : id;
+                labelText = labelText.replace("*", "").trim() || input.placeholder || id;
+    
+                let warningText = "Please fill required fields";
+                if (tagName === "INPUT" || tagName === "TEXTAREA") {
+                    warningText = `Please fill ${labelText} field`;
+                } else if (tagName === "SELECT") {
+                    warningText = `Please select an item from ${labelText} field`;
+                }
+    
+                const inputElement = document.getElementById(id);
+                if (!inputElement.classList.contains("border-danger")) {
+                    inputElement.classList.add("border-danger");
+                    const warningHtml = `<div class="oopsError text-danger form-text">${warningText}</div>`;
+                    const parentElement = inputElement.parentElement;
+                    const itemToAddWarning = parentElement.classList.contains("input-group") ? parentElement : inputElement;
+                    itemToAddWarning.insertAdjacentHTML("afterend", warningHtml);
+    
+                    setTimeout(() => {
+                        inputElement.classList.remove("border-danger");
+                        document.querySelectorAll(".oopsError").forEach(errorElement => {
+                            errorElement.remove();
+                        });
+                    }, 10000);
+                }
+            }
+        });
+    
         return isValidResult;
     },
     logError: function (errorText) {
         console.log('%c' + errorText, 'background: #ff8888; color: #fff');
     },
+    /**
+     * Searches upward from a given element to find a `label` element within a specified number of levels.
+     *
+     * @param {HTMLElement} element - The starting element for the search.
+     * @param {number} levels - The number of parent levels to traverse up.
+     * @returns {HTMLElement|null} - The first `label` element found, or `null` if none is found.
+     *
+     * @example
+     * let inputElement = document.getElementById('input1');
+     * let labelElement = findLabelUp(inputElement, 3); // Finds and returns the label element
+     */
     findLabelUp: function (element, levels) {
         for (let i = 0; i < levels; i++) {
             element = element.parentElement;
@@ -513,7 +516,8 @@ var sc = {
         }
         return null;
     },
-    //adds asterisk * to input labels which have required property
+    
+    /** @description adds asterisk * to input labels which have required property */
     addAsteriskForRequiredFields: function (formSelector) {
         formSelector = !this.ine(formSelector) ? formSelector : "body";
         var formElement = document.querySelector(formSelector);
@@ -615,63 +619,65 @@ var sc = {
     },
 
     /** @description Compiles form data as json form data in default but with isFormData parameter it generates a FormData for XMLHttpRequest.
-    * @param {boolean} isFormData It is used for file upload beacuse we post FormData to backend side
+     * @param {boolean} isFormData It is used for file upload beacuse we post FormData to backend side
      * @return {jsonForm or formdata}
     */
-    getFormData: function (formSelector, isFormData) {
-        var jsonForm = {};
-        var form = document.querySelector(formSelector);
-
-        if (!formSelector && document.forms.length === 1) {
+     
+    getFormData: function (formId) {
+        const jsonForm = {};
+        let isFormData = false; 
+        let form = document.getElementById(formId);
+        
+        if (!formId && document.forms.length === 1) {
             form = document.forms[0];
         }
-
-        var elements = form.querySelectorAll("input, select, textarea, ul.dynamicList");
-
-        elements.forEach(function (element) {
-            var input = element;
-            var id = input.id || input.name;
-
-            if (id) {
-                if (input.type === "checkbox") {
-                    jsonForm[id] = input.checked;
-                } else if (input.type === "radio") {
-                    var name = input.name;
-                    jsonForm[name] = document.querySelector(
-                        formSelector + " input[name='" + name + "']:checked"
-                    ).value;
-                } else if (input.type === "file") {
-                    jsonForm[id] = input.files.length > 0 ? input.files[0] : "";
-                } else if (input.type === "date") {
-                    jsonForm[id] = input.value == "" ? null : input.value;
-                } else if (input.type === "ul") {
-                    jsonForm[id] = getDynamicListVal(id);
-                } else {
-                    var texttype = input.dataset.texttype;
-                    jsonForm[id] = input.value;
-
-                    if (id && texttype === "Money") {
-                        jsonForm[id] = parseFloat(input.value.replace(/,/g, "")) || 0;
+        
+        if (!form) {
+            return null; // Return null if the form is not found
+        }
+        
+        const elements = form.querySelectorAll("input, select, textarea, ul.dynamicList");
+    
+        elements.forEach(element => {
+            const id = element.id || element.name;
+            if (!this.ine(id)) {
+                if (id === "__RequestVerificationToken") { return; }
+                switch (element.type) {
+                    case "checkbox":
+                        jsonForm[id] = element.checked;
+                        break;
+                    case "radio":
+                        const checkedOne = form.querySelector(`input[name='${element.name}']:checked`);
+                        if (checkedOne) jsonForm[element.name] = checkedOne.value;
+                        break;
+                    case "file":
+                        isFormData = true;
+                        jsonForm[id] = element.files.length > 0 ? element.files[0] : null;
+                        break;
+                    case "date":
+                        jsonForm[id] = element.value || null;
+                        break;
+                    case "ul":
+                        jsonForm[id] = getDynamicListVal(id);
+                        break;
+                    default:
+                        jsonForm[id] = element.value;
+                        if (element.dataset.texttype === "Money") {
+                            jsonForm[id] = parseFloat(element.value.replace(/,/g, "")) || 0;
+                        }
+                        break;
                     }
                 }
-            }
         });
-
+    
         if (isFormData) {
-            var formData = new FormData();
-            for (var key in jsonForm) {
+            const formData = new FormData();
+            for (const key in jsonForm) {
                 formData.append(key, jsonForm[key]);
             }
             return formData;
         }
-
         return jsonForm;
-        //for (var pair of data.entries()) {
-        //  console.log(pair[0] + ': ' + pair[1]);
-        //  console.log(pair + ": " + data[pair]);
-        //}
-        //ya da
-        //console.log(Object.fromEntries(data))
     },
     fixEmptyHyperLink: function () {
         var links = document.querySelectorAll("a");
@@ -1775,10 +1781,61 @@ var sc = {
         var endDate = element.value.split(" - ")[1];
         return endDate;
     },
+    
+    /**
+    * Sends a form to a specified URL using either POST or GET method. Wrapper method for fetchData() to handle forms automatically
+    * 
+    * @param {string} url - The URL to send the form data to.
+    * @param {string} formId - The ID of the form element.
+    * @param {boolean} [isMethodPost=true] - Determines if the request method is POST. Defaults to true.
+    * @param {function} [successFunction=null] - Optional. A function to be called upon successful response.
+    * @param {string} [containerDivId=null] - Optional. The ID of the container div to update with the response data.
+    * 
+    * This function performs the following steps:
+    * 1. Checks if the form element exists. If not, it displays an error message and returns.
+    * 2. Retrieves the form data.
+    * 3. Sends the form data to the specified URL using the fetchData() function.
+    */
+    sendForm: function (url,formId,isMethodPost = true,successFunction = null,containerDivId = null) {
+        let myForm = document.getElementById(formId);
+        if(this.ine(myForm)){
+            this.showMessage("Form not found!",false);
+            return;
+        }
+        let data = this.getFormData(formId);
+        let successFunction = function (r) {
+        if (r.ok) {
+                document.getElementById(containerDivId).innerHTML = r.object;
+            }
+        }
+        this.fetchData(url,data,true,successFunction,"#"+formId);
+    },
+    /**
+     * Fetches data from a specified URL using either POST or GET method.
+     * 
+     * @param {string} url - The URL to fetch the data from.
+     * @param {object} [data=null] - Optional. The data to be sent with the request.
+     * @param {boolean} [isMethodPost=true] - Determines if the request method is POST. Defaults to true.
+     * @param {function} [successFunction=null] - Optional. A function to be called upon successful response.
+     * @param {string} [loadingSelector=null] - Optional. The selector to block while the request is being processed.
+     * 
+     * This function performs the following steps:
+     * 1. Retrieves the anti-forgery token.
+     * 2. Determines if the provided data is an instance of FormData.
+     * 3. Blocks the UI element specified by the loadingSelector to indicate loading.
+     * 4. Prepares the request body based on the data and request method.
+     * 5. Sets up the request headers, including the anti-forgery token and Content-Type if the data is not FormData.
+     * 6. Sends the request to the specified URL using the fetch API.
+     * 7. Handles the response:
+     *    - If the response is redirected, it navigates to the redirected URL.
+     *    - If the response is successful, it calls the success function (if provided).
+     *    - If there is a message in the response, it displays the message.
+     * 8. Handles errors by displaying an error message.
+     * 9. Unblocks the UI element specified by the loadingSelector after the request is completed.
+     */
     fetchData: function (url, data = null, isMethodPost = true, successFunction = null, loadingSelector = null) {
         //anti-forgery token
         let token = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
         let isFormData = (data instanceof FormData);
         this.block(loadingSelector);
         let body = null;
@@ -1789,7 +1846,7 @@ var sc = {
                 body = JSON.stringify(data);
             }
         }
-        var headers = {
+        let headers = {
             'Accept': 'application/json',
             'XSRF-TOKEN': token != null ? token : ""
         }
