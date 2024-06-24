@@ -36,6 +36,7 @@ var sc = {
         }
         this.activateTooltip();
         this.activatePopover();
+        this.initScrollToTopButton();
         /*this.handleFeedbackForm();*/
     },
     /** @description Is null or empty*/
@@ -2133,7 +2134,55 @@ var sc = {
         'blue-grey-800': '#37474f',
         'blue-grey-900': '#263238'
     },
-
+    initScrollToTopButton: function () {
+        // Create button element
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-danger btn-floating btn-lg";
+        button.id = "btn-back-to-top";
+        button.title = "Go to top";
+    
+        // Apply CSS styles directly to the button object
+        button.style.position = "fixed";
+        button.style.bottom = "90px";
+        button.style.right = "20px";
+        button.style.display = "none";
+    
+        // Create icon element
+        var icon = document.createElement("i");
+        icon.className = "ph ph-caret-double-up";
+    
+        // Append icon to button
+        button.appendChild(icon);
+    
+        // Append button to body
+        document.body.appendChild(button);
+    
+        // Optional: Add functionality to show/hide button based on scroll position
+        window.addEventListener("scroll", function () {
+            if (document.documentElement.scrollTop > 200) {
+                button.style.display = "block";
+            } else {
+                button.style.display = "none";
+            }
+        });
+    
+        // Optional: Add functionality to scroll to top when button is clicked
+        button.addEventListener("click", function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        let handleButtonVisibility = function () {
+            //Display or hide "Back to top" button
+            var currentPos = document.body.scrollTop || document.documentElement.scrollTop;
+            // When the user scrolls down 20px from the top of the document, show the button
+            if (currentPos > 20) {
+                button.style.display = "block";
+            } else {
+                button.style.display = "none";
+            }
+        }
+        window.addEventListener('scroll', handleButtonVisibility);
+    }
 }
 document.addEventListener("DOMContentLoaded", function () {
     sc.init();
