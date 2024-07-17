@@ -522,7 +522,7 @@ var sc = {
         formSelector = !this.ine(formSelector) ? formSelector : "body";
         var formElement = document.querySelector(formSelector);
         let inputList = formElement.querySelectorAll('input[required], select[required], textarea[required]');
-        inputList.forEach(function (input) {
+        inputList.forEach((input) => {
             var label;
             var id = input.id;
             var name = input.name;
@@ -1869,12 +1869,12 @@ var sc = {
             }
             return response.json();
         }).then(r => {
+            if (r.message != "" && r.message != null)
+                this.showMessage(r.message, r.isSuccess);
             if (r.isSuccess) {
                 if (successFunction != null)
                     successFunction(r);
             }
-            if (r.message != "" && r.message != null)
-                this.showMessage(r.message, r.isSuccess);
         }).catch((error) => {
             this.showMessage(error, false);
             console.error('Error:', error);
