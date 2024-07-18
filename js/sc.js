@@ -1803,12 +1803,16 @@ var sc = {
             return;
         }
         let data = this.getFormData(formId);
-        let successFunction = function (r) {
-        if (r.ok) {
-                document.getElementById(containerDivId).innerHTML = r.object;
+        let wrapperSuccessFunction = function (r) {
+            if (r.ok) {
+                if (containerDivId)
+                    document.getElementById(containerDivId).innerHTML = r.object;
+                if (successFunction)
+                    successFunction(r);
             }
+            
         }
-        this.fetchData(url,data,true,successFunction,"#"+formId);
+        this.fetchData(url,data,true,wrapperSuccessFunction,"#"+formId);
     },
     /**
      * Fetches data from a specified URL using either POST or GET method.
