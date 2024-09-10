@@ -1852,7 +1852,7 @@ var sc = {
         }
         let headers = {
             'Accept': 'application/json',
-            'XSRF-TOKEN': token != null ? token : ""
+            'XSRF-TOKEN': token || ""
         }
         if (!isFormData) {
             headers['Content-Type'] = 'application/json';//'Content-Type': 'application/json', //'Content-Type': 'application/x-www-form-urlencoded',
@@ -1862,26 +1862,24 @@ var sc = {
             headers: headers,
             body: body,
         }).then(response => {
-            if (response.ok) {
-                if (response.redirected) {
-                    let redUrl = response.url;
-                    window.location = redUrl;
-                }
-            } else {
-                this.showMessage(error, false);
-                throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`); //we move to catch() from here
+            }
+            if (response.redirected) {
+                window.location = response.url;
+                return;
             }
             return response.json();
         }).then(r => {
-            if (r.message != "" && r.message != null)
+            if (r && !this.ine(r.message))
                 this.showMessage(r.message, r.isSuccess);
-            if (r.isSuccess) {
+            if (r?.isSuccess && successFunction) {
                 if (successFunction != null)
                     successFunction(r);
             }
         }).catch((error) => {
-            this.showMessage(error, false);
-            console.error('Error:', error);
+            this.showMessage(`An error occurred: ${error.message}`, false);
+            console.error('Fetch error:', error.message);
         }).finally(() => {
 
             this.unblock(loadingSelector);
