@@ -1,14 +1,4 @@
 var sc = {
-
-    assetsPath: function () {
-        return '../assets/';
-    },
-
-    globalImgPath: function () {
-        return '../img/';
-    },
-
-
     init: function () {
         this.fixEmptyHyperLink();
         this.stringFormat();
@@ -55,7 +45,7 @@ var sc = {
     },
     /** @description Is null or empty or zero*/
     inez: function (text) {
-        if (text === null || text === undefined || text === "undefined" || text === "" || text === 0 || text === "0") {
+        if (this.ine(text) || text === 0 || text === "0") {
             return true;
         }
         return false;
@@ -75,7 +65,7 @@ var sc = {
     /** @description Is input value true*/
     isTrue: function (value) {
         if (!this.ine(value)) {
-            var isString = this.isString(value);
+            const isString = this.isString(value);
             if (isString) {
                 if (value.toLowerCase() === "true")
                     return true;
@@ -89,7 +79,7 @@ var sc = {
     /** @description Is input value false*/
     isFalse: function (value) {
         if (!this.ine(value)) {
-            var isString = this.isString(value);
+            const isString = this.isString(value);
             if (isString) {
                 if (value.toLowerCase() === "false")
                     return true;
@@ -296,49 +286,7 @@ var sc = {
 
     },
 
-    openModal: function (contentUrl, id, modalSize, headerText, data, successFunction, hasCloseButton) {
-        if (document.getElementById(id)) {
-            document.getElementById(id).remove();
-        }
-        let closeButtonHtml =
-            '      <div class="modal-footer">' +
-            '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' +
-            '      </div>';
-        var skeleton = '<div class="modal fade"  id="' + id + '" tabindex="-1">' +
-            '  <div class="modal-dialog ' + modalSize + '">' +
-            '    <div class="modal-content">' +
-            '      <div class="modal-header">' +
-            '          <h5 class="modal-title">' + headerText + '</h4>' +
-            '          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>' +
-            '      </div>' +
-            '      <div class="modal-body">' +
-            '        <div class="d-flex justify-content-center align-items-center"><div class="spinner-border ms-auto" role="status" aria-hidden="true"></div><span class="mx-3 my-auto">Loading...</span></div>' +
-            '      </div>' + (hasCloseButton ? closeButtonHtml : '') +
-            '    </div>' +
-            '  </div>' +
-            '</div>';
-        window.document.body.insertAdjacentHTML('beforeend', skeleton);
-        /*body[0].innerHTML += skeletion;*/
-        var s = function (resp) {
-            if (resp.isSuccess) {
-                let myModalEl = bootstrap.Modal.getOrCreateInstance(document.getElementById(id)) // Returns a Bootstrap modal instance
-                // Show or hide:
-                myModalEl.show();
-
-                //myModalEl.dispose();
-                //myModalEl.addEventListener('shown.bs.modal', event => {
-                //})
-                //myModalEl.addEventListener('hidden.bs.modal', event => {
-                //})
-                if (!this.ine(successFunction)) {
-                    successFunction(resp);
-                }
-            }
-        };
-        //var modalBodies = document.querySelectorAll(".modal-body");
-        //var lastModalBody = modalBodies[modalBodies.length - 1];
-        this.postData(contentUrl, data, "#" + id + " .modal-body", "#" + id + " .modal-body", s);
-    },
+     
     //registers replaceGlobal extension function
     registerReplaceGlobal: function () {
         // First, checks if it isn't implemented yet.
@@ -617,7 +565,22 @@ var sc = {
         });
 
     },
+    showMessage: function (message, isSuccess) {
+        let myClassNames = "";
+        if (isSuccess == null) {
+            myClassNames += "info"
+        } else {
+            myClassNames += isSuccess ? "success" : "error";
+        }
+        if (this.polipop != null) {
+            this.polipop.add({
 
+                content: message,
+                /*title: 'Message',*/
+                type: myClassNames, //default, info, success, warning or error
+            });
+        }
+    },
     /** @description Compiles form data as json form data in default but with isFormData parameter it generates a FormData for XMLHttpRequest.
      * @param {boolean} isFormData It is used for file upload beacuse we post FormData to backend side
      * @return {jsonForm or formdata}
@@ -1781,7 +1744,20 @@ var sc = {
         var endDate = element.value.split(" - ")[1];
         return endDate;
     },
-    
+    block: function (target) {
+        if (blockerscb) {
+            blockerscb.block(target);
+        } else {
+            this.logError("blockerscb module hasn't been initialized!");
+        }
+    },
+    unblock: function (target) {
+        if (blockerscb) {
+            blockerscb.unblock(target);
+        } else {
+            this.logError("blockerscb module hasn't been initialized!");
+        }
+    },
     /**
     * Sends a form to a specified URL using either POST or GET method. Wrapper method for fetchData() to handle forms automatically
     * 
@@ -1812,7 +1788,7 @@ var sc = {
             }
             
         }
-        this.fetchData(url,data,true,wrapperSuccessFunction,"#"+formId);
+        this.fetchData(url,data,isMethodPost,wrapperSuccessFunction,"#"+formId);
     },
     /**
      * Fetches data from a specified URL using either POST or GET method.
@@ -1873,7 +1849,7 @@ var sc = {
         }).then(r => {
             if (r && !this.ine(r.message))
                 this.showMessage(r.message, r.isSuccess);
-            if (r?.isSuccess && successFunction) {
+            if (r != null && r.isSuccess) {
                 if (successFunction != null)
                     successFunction(r);
             }
@@ -1923,7 +1899,70 @@ var sc = {
     //}
 
     //Enums
+    animateElement: function (id) {
+        item = document.getElementById(id);
+        if (item) {
+            // item.animate(...) returns an Animation (refer to https://developer.mozilla.org/en-US/docs/Web/API/Element/animate)
+            item.animate([
+                // keyframes
+                { transform: 'translateX(-15px)', opacity: '0.3' },
+                { transform: 'translateX(-10px)', opacity: '0.5' },
+                { transform: 'translateX(-6px)', opacity: '0.7' },
+                { transform: 'translateX(-3px)', opacity: '0.9' },
+                { transform: 'translateX(0px)', opacity: '1' }
 
+            ], {
+                duration: 500,
+            });
+        }
+    },
+    openModal: function (contentUrl, id, modalSize, headerText, data, successFunction, hasCloseButton) {
+        if (document.getElementById(id)) {
+            document.getElementById(id).remove();
+        }
+        let closeButtonHtml =
+            '      <div class="modal-footer">' +
+            '        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>' +
+            '      </div>';
+        let skeleton =
+            '<div class="modal fade"  id="' + id + '" tabindex="-1">' +
+            '  <div class="modal-dialog ' + modalSize + '">' +
+            '    <div class="modal-content">' +
+            '      <div class="modal-header">' +
+            '          <h5 class="modal-title">' + headerText + '</h4>' +
+            '          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>' +
+            '      </div>' +
+            '      <div class="modal-body">' +
+            '        <div class="d-flex justify-content-center align-items-center">' +
+            '          <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div><span class="mx-3 my-auto">Loading...</span>' +
+            '        </div>' +
+            '      </div>' + (hasCloseButton ? closeButtonHtml : '') +
+            '    </div>' +
+            '  </div>' +
+            '</div>';
+        window.document.body.insertAdjacentHTML('beforeend', skeleton);
+        let self = this;
+        let s = function (resp) {
+            if (resp.isSuccess) {
+                document.querySelector("#" + id + " .modal-body").innerHTML = resp.object;
+                let myModalEl = bootstrap.Modal.getOrCreateInstance(document.getElementById(id)) // Returns a Bootstrap modal instance
+                // Show or hide:
+                myModalEl.show();
+
+                //myModalEl.dispose();
+                //myModalEl.addEventListener('shown.bs.modal', event => {
+                //})
+                //myModalEl.addEventListener('hidden.bs.modal', event => {
+                //})
+                if (!self.ine(successFunction)) {
+                    successFunction(resp);
+                }
+            }
+        };
+        //let modalBodies = document.querySelectorAll(".modal-body");
+        //let lastModalBody = modalBodies[modalBodies.length - 1];
+        this.fetchData(contentUrl, data, true, s);
+    },
     modalSize: {
         S: "modal-sm",
         M: "",
@@ -2195,7 +2234,7 @@ var sc = {
     },
     initScrollToTopButton: function () {
         // Create button element
-        var button = document.createElement("button");
+        let button = document.createElement("button");
         button.type = "button";
         button.className = "btn btn-danger btn-floating btn-lg";
         button.id = "btn-back-to-top";
@@ -2208,7 +2247,7 @@ var sc = {
         button.style.display = "none";
     
         // Create icon element
-        var icon = document.createElement("i");
+        let icon = document.createElement("i");
         icon.className = "ph ph-caret-double-up";
     
         // Append icon to button
@@ -2232,7 +2271,7 @@ var sc = {
         });
         let handleButtonVisibility = function () {
             //Display or hide "Back to top" button
-            var currentPos = document.body.scrollTop || document.documentElement.scrollTop;
+            let currentPos = document.body.scrollTop || document.documentElement.scrollTop;
             // When the user scrolls down 20px from the top of the document, show the button
             if (currentPos > 20) {
                 button.style.display = "block";
