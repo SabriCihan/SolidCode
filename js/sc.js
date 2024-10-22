@@ -624,7 +624,7 @@ var sc = {
                         jsonForm[id] = getDynamicListVal(id);
                         break;
                     default:
-                        jsonForm[id] = element.value;
+                        jsonForm[id] = element.value || null;
                         if (element.dataset.texttype === "Money") {
                             jsonForm[id] = parseFloat(element.value.replace(/,/g, "")) || 0;
                         }
